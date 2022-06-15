@@ -12,7 +12,9 @@
 
 def get_values(*names):
     import json
-    _all_values = json.loads("""{"num_samples":8,"deepwell_type":"nest_96_wellplate_2ml_deep","res_type":"nest_12_reservoir_15ml","starting_vol":300,"elution_vol":50,"park_tips":true,"mag_gen":"magnetic module gen2","m300_mount":"left"}""")
+    _all_values = json.loads("""{"num_samples":8,"deepwell_type":"nest_96_wellplate_2ml_deep",
+    "res_type":"nest_12_reservoir_15ml","starting_vol":300,"elution_vol":50,"park_tips":true,
+    "mag_gen":"magnetic module gen2","m300_mount":"left"}""")
     return [_all_values[n] for n in names]
 
 
@@ -54,26 +56,26 @@ def run(ctx):
     Here is where you can change the locations of your labware and modules
     (note that this is the recommended configuration)
     """
-    magdeck = ctx.load_module(mag_gen, '6')
+    magdeck = ctx.load_module(mag_gen, '1')
     magdeck.disengage()
     magplate = magdeck.load_labware(deepwell_type, 'deepwell plate')
-    tempdeck = ctx.load_module('Temperature Module Gen2', '1')
+    tempdeck = ctx.load_module('Temperature Module Gen2', '3')
     elutionplate = tempdeck.load_labware(
                 'opentrons_96_aluminumblock_nest_wellplate_100ul')
     waste = ctx.load_labware('nest_1_reservoir_195ml', '9',
                              'Liquid Waste').wells()[0].top()
-    res2 = ctx.load_labware(res_type, '3', 'reagent reservoir 2')
+    res2 = ctx.load_labware(res_type, '4', 'reagent reservoir 2')
     res1 = ctx.load_labware(res_type, '2', 'reagent reservoir 1')
     num_cols = math.ceil(num_samples/8)
     tips300 = [ctx.load_labware('opentrons_96_tiprack_300ul', slot,
                                 '200µl filtertiprack')
-               for slot in ['5', '7', '8', '10', '11']]
+               for slot in ['6', '7', '8', '10', '11']]
     if park_tips:
         parkingrack = ctx.load_labware(
-            'opentrons_96_tiprack_300ul', '4', 'tiprack for parking')
+            'opentrons_96_tiprack_300ul', '5', 'tiprack for parking')
         parking_spots = parkingrack.rows()[0][:num_cols]
     else:
-        tips300.insert(0, ctx.load_labware('opentrons_96_tiprack_300ul', '4',
+        tips300.insert(0, ctx.load_labware('opentrons_96_tiprack_300ul', '5',
                                            '200µl filtertiprack'))
         parking_spots = [None for none in range(12)]
 

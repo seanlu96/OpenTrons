@@ -14,42 +14,47 @@ from opentrons import types
 def run(ctx):
 
     # Deck Overview
-    # 1
-    # 2
-    # 3
-    # 4 = Magnetic Module + PCR plate
-    # 5 = Nest 12 reservoir (Oligo dT beads = max 480ul, RNA binding buffer = 6000)
-    # 6 = Tips
-    # 7 = Waste
+    # 1 Magnetic Module + PCR plate
+    # 2 Nest 12 reservoir (Oligo dT beads = max 480ul, RNA binding buffer = 6000)
+    # 3 Temperature module (unused)
+    # 4 Waste
+    # 5 Tips
 
     # Experiment Parameters
-    sample_count = 8
-    num_col = sample_count/8
+    sample_count = 16
+    num_cols = int(sample_count/8)
     m300_mount = 'left'
+
 
     # Load labware
     labware_96_plate = 'nest_96_wellplate_100ul_pcr_full_skirt'
     res_type = 'nest_12_reservoir_15ml'
-    tips300 = ctx.load_labware('opentrons_96_tiprack_300ul', '6','200µl filtertiprack')
-    res1 = ctx.load_labware(res_type, '5', 'reagent reservoir 1')
+    tips300 = [ctx.load_labware('opentrons_96_tiprack_300ul', '5', '200µl filtertiprack')]
+    res1 = ctx.load_labware(res_type, '2', 'reagent reservoir 1')
+    parking_spots = [None for none in range(12)]
 
     # Reagents
-    beads = res1.wells()[0:1]
-    buffer = res1.wells()[1:2]
-    waste = res1.wells()[2:]
+    beads = res1.wells()[0:1]  #Oligo dT Beads = num samples * 20ul * 1.5
+    wash = res1.wells()[1:2]  #RNA Binding Buffer (2X) = num_samples * 250ul * 1.5
+    waste = res1.wells()[11]
+
 
 
     # Modules
-    mag = ctx.load_module('magnetic module gen2', '4')
+    mag = ctx.load_module('magnetic module gen2', '1')
     mag.disengage()
     magplate = mag.load_labware(labware_96_plate, 'Mag Plate')
+    mag_samples_m = magplate.rows()[0][:num_cols]
 
 
     # P300M pipette
     m300 = ctx.load_instrument('p300_multi_gen2', m300_mount, tip_racks=tips300)
 
+    # Waste Tracking
+    waste_vol = 0
+    waste_well = 3
+    waste_threshold = 15000
 
-    # Helper functions
 
     def remove_supernatant(vol, park=False):
         """
@@ -61,14 +66,22 @@ def run(ctx):
                                in the 'parking rack' or to pick up new tips.
         """
 
+        def _waste_track(vol):
+            nonlocal waste_vol
+            if waste_vol + vol >= waste_threshold:
+                # Setup for flashing lights notification to empty liquid waste
+
+                m300.home()
+                ctx.pause('Please empty liquid waste (slot 11) before \ resuming.')
+                ctx.home()  # home before continuing with protocol
+                waste_vol = 0
+            waste_vol += vol
+
         m300.flow_rate.aspirate = 30
         num_trans = math.ceil(vol / 200)
         vol_per_trans = vol / num_trans
+        m300.pick_up_tip()
         for i, (m, spot) in enumerate(zip(mag_samples_m, parking_spots)):
-            if park:
-                _pick_up(m300, spot)
-            else:
-                _pick_up(m300)
             side = -1 if i % 2 == 0 else 1
             loc = m.bottom(0.5).move(Point(x=side * 2))
             for _ in range(num_trans):
@@ -81,67 +94,25 @@ def run(ctx):
                               air_gap=20)
                 m300.blow_out(waste)
                 m300.air_gap(20)
-            _drop(m300)
+            # m300.drop_tip()
+        m300.drop_tip()
         m300.flow_rate.aspirate = 150
 
-    def wash(vol, source, mix_reps=15, park=True, resuspend=True):
-        """
-        `wash` will perform bead washing for the extraction protocol.
-        :param vol (float): The amount of volume to aspirate from each
-                            source and dispense to each well containing beads.
-        :param source (List[Well]): A list of wells from where liquid will be
-                                    aspirated. If the length of the source list
-                                    > 1, `wash` automatically calculates
-                                    the index of the source that should be
-                                    accessed.
-        :param mix_reps (int): The number of repititions to mix the beads with
-                               specified wash buffer (ignored if resuspend is
-                               False).
-        :param park (boolean): Whether to save sample-corresponding tips
-                               between adding wash buffer and removing
-                               supernatant.
-        :param resuspend (boolean): Whether to resuspend beads in wash buffer.
-        """
 
-        if resuspend and magdeck.status == 'engaged':
-            magdeck.disengage()
+    m300.flow_rate.aspirate = 30
+    m300.distribute(20, beads, magplate.columns()[0:num_cols], disposal_volume=10, mix_before=(6,15))
+    m300.flow_rate.aspirate = 75
+    m300.flow_rate.dispense = 75
+    m300.distribute(100,wash,magplate.columns()[0:num_cols],disposal_volume=50, mix_after=(6,100))
+    mag.engage()
+    ctx.delay(minutes=3)
+    remove_supernatant(100)
+    mag.disengage()
+    m300.distribute(100, wash, magplate.columns()[0:num_cols], disposal_volume=50, mix_after=(6, 100))
+    mag.engage()
+    ctx.delay(minutes=3)
+    remove_supernatant(100)
+    mag.disengage()
+    m300.distribute(50, wash, magplate.columns()[0:num_cols], disposal_volume=50, mix_after=(6, 100))
 
-        num_trans = math.ceil(vol/200)
-        vol_per_trans = vol/num_trans
-        for i, (m, spot) in enumerate(zip(mag_samples_m, parking_spots)):
-            _pick_up(m300)
-            # side = 1 if i % 2 == 0 else -1
-            # loc = m.bottom(0.5).move(Point(x=side*2))
-            src = source[i//(12//len(source))]
-            for n in range(num_trans):
-                if m300.current_volume > 0:
-                    m300.dispense(m300.current_volume, src.top())
-                m300.transfer(vol_per_trans, src, m.top(), air_gap=20,
-                              new_tip='never')
-                if n < num_trans - 1:  # only air_gap if going back to source
-                    m300.air_gap(20)
-            if resuspend:
-                # m300.mix(mix_reps, 150, loc)
-                resuspend_pellet(m, m300, 180)
-            m300.blow_out(m.top())
-            m300.air_gap(20)
-            if park:
-                m300.drop_tip(spot)
-            else:
-                _drop(m300)
 
-        if magdeck.status == 'disengaged':
-            magdeck.engage(height=MAG_HEIGHT)
-
-        ctx.delay(minutes=settling_time, msg='Incubating on MagDeck for \
-' + str(settling_time) + ' minutes.')
-
-        remove_supernatant(vol, park=park)
-
-    def add_beads(bead_loc, cols):
-        current_col = 0
-        while current_col < cols:
-            m300.distribute(20, res1.wells_by_name(bead_loc),magplate)
-            current_col += 1
-
-    add_beads('beads',1)
