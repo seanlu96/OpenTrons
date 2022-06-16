@@ -64,18 +64,18 @@ def run(ctx):
                 'opentrons_96_aluminumblock_nest_wellplate_100ul')
     waste = ctx.load_labware('nest_1_reservoir_195ml', '9',
                              'Liquid Waste').wells()[0].top()
-    res2 = ctx.load_labware(res_type, '4', 'reagent reservoir 2')
-    res1 = ctx.load_labware(res_type, '2', 'reagent reservoir 1')
+    res2 = ctx.load_labware(res_type, '10', 'reagent reservoir 2')
+    res1 = ctx.load_labware(res_type, '7', 'reagent reservoir 1')
     num_cols = math.ceil(num_samples/8)
     tips300 = [ctx.load_labware('opentrons_96_tiprack_300ul', slot,
                                 '200µl filtertiprack')
-               for slot in ['6', '7', '8', '10', '11']]
+               for slot in ['2', '5', '6', '8', '11']]
     if park_tips:
         parkingrack = ctx.load_labware(
-            'opentrons_96_tiprack_300ul', '5', 'tiprack for parking')
+            'opentrons_96_tiprack_300ul', '4', 'tiprack for parking')
         parking_spots = parkingrack.rows()[0][:num_cols]
     else:
-        tips300.insert(0, ctx.load_labware('opentrons_96_tiprack_300ul', '5',
+        tips300.insert(0, ctx.load_labware('opentrons_96_tiprack_300ul', '4',
                                            '200µl filtertiprack'))
         parking_spots = [None for none in range(12)]
 
