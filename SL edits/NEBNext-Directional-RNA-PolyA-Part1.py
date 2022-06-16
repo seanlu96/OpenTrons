@@ -1,6 +1,11 @@
 def get_values(*names):
     import json
-    _all_values = json.loads("""{"sample_count":8,"labware_pcr_plate":"nest_96_wellplate_100ul_pcr_full_skirt","labware_reservoir":"nest_12_reservoir_15ml","labware_tube_strip":"opentrons_96_aluminumblock_generic_pcr_strip_200ul","clearance_reservoir":2,"clearance_sample_plate":1,"clearance_bead_pellet":2,"clearance_strip_tubes":2,"flow_rate_beads":60,"delay_beads":1,"engage_offset":0,"engage_time":5,"dry_time":5}""")
+    _all_values = json.loads("""{"sample_count":8,
+    "labware_pcr_plate":"nest_96_wellplate_100ul_pcr_full_skirt",
+    "labware_reservoir":"nest_12_reservoir_15ml",
+    "labware_tube_strip":"opentrons_96_aluminumblock_generic_pcr_strip_200ul",
+    "clearance_reservoir":2,"clearance_sample_plate":1,"clearance_bead_pellet":2,"clearance_strip_tubes":2,
+    "flow_rate_beads":60,"delay_beads":1,"engage_offset":0,"engage_time":5,"dry_time":5}""")
     return [_all_values[n] for n in names]
 
 
@@ -38,12 +43,12 @@ def run(ctx):
     tips20 = [ctx.load_labware(
      "opentrons_96_filtertiprack_20ul", str(slot)) for slot in [2]]
     p20m = ctx.load_instrument(
-        "p20_multi_gen2", 'left', tip_racks=tips20)
+        "p20_multi_gen2", 'right', tip_racks=tips20)
     tips300 = [
      ctx.load_labware(
       "opentrons_96_filtertiprack_200ul", str(slot)) for slot in [6, 9]]
     p300m = ctx.load_instrument(
-        "p300_multi_gen2", 'right', tip_racks=tips300)
+        "p300_multi_gen2", 'left', tip_racks=tips300)
 
     """
     helper functions
@@ -160,29 +165,29 @@ def run(ctx):
     """)
 
     ctx.comment("""
-    reagent reservoir in deck slot 1:
-    col 1 - washed (NEB instructions) oligo dT beads
+    reagent reservoir in deck slot 4:
+    col 1 - washed (NEB instructions) oligo dT beads (Already done in Part 0)
     col 2 - wash buffer
     col 3 - Tris buffer
     col 4 - RNA binding buffer
     col 10,11,12 - waste
     """)
     reagent_reservoir = ctx.load_labware(
-     labware_reservoir, '1', 'Reagent Reservoir')
+     labware_reservoir, '4', 'Reagent Reservoir')
     [oligo_dt_beads, wash_buffer,
      tris_buffer, rna_binding_buffer, waste_1, waste_2, waste_3] = [
      reagent_reservoir.wells_by_name()[well] for well in [
       'A1', 'A2', 'A3', 'A4', 'A10', 'A11', 'A12']]
 
     ctx.comment("""
-    mag plate on magnetic module
+    mag plate on magnetic module on deck 1
     """)
-    mag = ctx.load_module('magnetic module gen2', '4')
+    mag = ctx.load_module('magnetic module gen2', '1')
     mag.disengage()
-    mag_plate = mag.load_labware(labware_pcr_plate, 'Mag Plate')
+    mag_plate = mag.load_labware(labware_pcr_plate, 'Mag Plate') #contains RNA samples + beads
 
     ctx.comment("""
-    reagent block for tube strips on 4 degree temperature module
+    reagent block for tube strips on 4 degree temperature module on deck 3
     """)
     temp = ctx.load_module('temperature module gen2', '3')
     reagent_block = temp.load_labware(labware_tube_strip, '4 Degree Block')
@@ -197,41 +202,43 @@ def run(ctx):
     {} samples in this run
     """.format(str(sample_count)))
     num_cols = math.ceil(sample_count / 8)
-    sample_plate = elution_plate = ctx.load_labware(
+    elution_plate = ctx.load_labware(
      labware_pcr_plate, '7', 'RNA Sample Plate')
 
-    ctx.comment("""
-    add beads to RNA and mix
-    wait, engage magnet, wait
-
-    liquid handling method for beads:
-    slow flow rate for aspiration and dispense
-    wait for liquid to finish moving after aspiration and dispense
-    withdraw tip slowly from liquid
-    """)
-    viscous_flow_rates(p300m)
-    for column in sample_plate.columns()[:num_cols]:
-        p300m.pick_up_tip()
-        p300m.mix(3, 100, oligo_dt_beads.bottom(clearance_reservoir), rate=2)
-        aspirate_with_delay(p300m, 50, oligo_dt_beads.bottom(
-         clearance_reservoir), delay_beads)
-        slow_tip_withdrawal(p300m, oligo_dt_beads)
-        dispense_with_delay(p300m, 50, column[0].bottom(
-         clearance_sample_plate), delay_beads)
-        p300m.mix(6, 50, column[0].bottom(3), rate=2)
-        p300m.drop_tip()
-    default_flow_rates(p300m)
-
-    pause_attention("""
-        pausing for off-deck thermocycler steps
-
-        denaturation and binding:
-        5 min 65 C
-        30 sec 4 C
-
-        return plate to the magnetic module and resume
-        as soon as temperature reaches 4 degrees
-        """)
+    # Removed adding beads to RNA sample
+    #
+    # ctx.comment("""
+    # add beads to RNA and mix
+    # wait, engage magnet, wait
+    #
+    # liquid handling method for beads:
+    # slow flow rate for aspiration and dispense
+    # wait for liquid to finish moving after aspiration and dispense
+    # withdraw tip slowly from liquid
+    # """)
+    # viscous_flow_rates(p300m)
+    # for column in sample_plate.columns()[:num_cols]:
+    #     p300m.pick_up_tip()
+    #     p300m.mix(3, 100, oligo_dt_beads.bottom(clearance_reservoir), rate=2)
+    #     aspirate_with_delay(p300m, 50, oligo_dt_beads.bottom(
+    #      clearance_reservoir), delay_beads)
+    #     slow_tip_withdrawal(p300m, oligo_dt_beads)
+    #     dispense_with_delay(p300m, 50, column[0].bottom(
+    #      clearance_sample_plate), delay_beads)
+    #     p300m.mix(6, 50, column[0].bottom(3), rate=2)
+    #     p300m.drop_tip()
+    # default_flow_rates(p300m)
+    #
+    # pause_attention("""
+    #     pausing for off-deck thermocycler steps
+    #
+    #     denaturation and binding:
+    #     5 min 65 C
+    #     30 sec 4 C
+    #
+    #     return plate to the magnetic module and resume
+    #     as soon as temperature reaches 4 degrees
+    #     """)
 
     ctx.comment("""
         mix beads
@@ -259,7 +266,7 @@ def run(ctx):
     ctx.delay(minutes=engage_time)
     for column in mag_plate.columns()[:num_cols]:
         p300m.pick_up_tip()
-        p300m.aspirate(100, column[0].bottom(clearance_bead_pellet))
+        p300m.aspirate(100, column[0].bottom(clearance_bead_pellet)) #WARNING, check for beads
         p300m.air_gap(15)
         p300m.dispense(115, waste_1.top())
         p300m.air_gap(15)
