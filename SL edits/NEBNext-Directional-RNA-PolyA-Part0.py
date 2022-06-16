@@ -16,9 +16,10 @@ def run(ctx):
     # Deck Overview
     # 1 Magnetic Module + PCR plate
     # 2 Nest 12 reservoir (Oligo dT beads = max 480ul, RNA binding buffer = 6000)
-    # 3 Temperature module (unused)
+    # 3 Temperature module (RNA sample)
     # 4 Waste
     # 5 Tips
+    # 6
 
     # Experiment Parameters
     sample_count = 16
@@ -42,10 +43,18 @@ def run(ctx):
 
     # Modules
     mag = ctx.load_module('magnetic module gen2', '1')
+    mag_gen = 'magnetic module gen2'
     mag.disengage()
     magplate = mag.load_labware(labware_96_plate, 'Mag Plate')
     mag_samples_m = magplate.rows()[0][:num_cols]
-
+    if mag_gen == 'magdeck':
+        MAG_HEIGHT = 13.6
+    else:
+        MAG_HEIGHT = 6.8
+    tempdeck = ctx.load_module('Temperature Module Gen2', '3')
+    rnaplate = tempdeck.load_labware(
+        'opentrons_96_aluminumblock_nest_wellplate_100ul')
+    tempdeck.set_temperature(4)
 
     # P300M pipette
     m300 = ctx.load_instrument('p300_multi_gen2', m300_mount, tip_racks=tips300)
@@ -114,5 +123,9 @@ def run(ctx):
     remove_supernatant(100)
     mag.disengage()
     m300.distribute(50, wash, magplate.columns()[0:num_cols], disposal_volume=50, mix_after=(6, 100))
+    m300.flow_rate.aspirate = 30
+    m300.transfer(50, magplate.columns()[0:num_cols], rnaplate.columns()[0:num_cols], mix_before=(6,40), mix_after=(6,45),
+                  air_gap=10)
+
 
 
