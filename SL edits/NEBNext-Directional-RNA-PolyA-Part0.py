@@ -14,12 +14,12 @@ from opentrons import types
 def run(ctx):
 
     # Deck Overview
-    # 1 Magnetic Module + PCR plate
-    # 2 Nest 12 reservoir (Oligo dT beads = max 480ul, RNA binding buffer = 6000)
+    # 1
+    # 2
     # 3 Temperature module (RNA sample)
-    # 4 Waste
-    # 5 Tips
-    # 6
+    # 4 Magnetic module + PCR plate
+    # 5 Nest 12 reservoir (Oligo dT beads = max 480ul, RNA binding buffer = 6000)
+    # 6 Tips
 
     # Experiment Parameters
     sample_count = 16
@@ -30,8 +30,8 @@ def run(ctx):
     # Load labware
     labware_96_plate = 'nest_96_wellplate_100ul_pcr_full_skirt'
     res_type = 'nest_12_reservoir_15ml'
-    tips300 = [ctx.load_labware('opentrons_96_tiprack_300ul', '5', '200µl filtertiprack')]
-    res1 = ctx.load_labware(res_type, '2', 'reagent reservoir 1')
+    tips300 = [ctx.load_labware('opentrons_96_tiprack_300ul', '6', '200µl filtertiprack')]
+    res1 = ctx.load_labware(res_type, '5', 'reagent reservoir 1')
     parking_spots = [None for none in range(12)]
 
     # Reagents
@@ -42,7 +42,7 @@ def run(ctx):
 
 
     # Modules
-    mag = ctx.load_module('magnetic module gen2', '1')
+    mag = ctx.load_module('magnetic module gen2', '4')
     mag_gen = 'magnetic module gen2'
     mag.disengage()
     magplate = mag.load_labware(labware_96_plate, 'Mag Plate')

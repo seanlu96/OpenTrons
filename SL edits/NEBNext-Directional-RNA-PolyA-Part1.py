@@ -173,7 +173,7 @@ def run(ctx):
     col 10,11,12 - waste
     """)
     reagent_reservoir = ctx.load_labware(
-     labware_reservoir, '4', 'Reagent Reservoir')
+     labware_reservoir, '1', 'Reagent Reservoir')
     [oligo_dt_beads, wash_buffer,
      tris_buffer, rna_binding_buffer, waste_1, waste_2, waste_3] = [
      reagent_reservoir.wells_by_name()[well] for well in [
@@ -182,7 +182,7 @@ def run(ctx):
     ctx.comment("""
     mag plate on magnetic module on deck 1
     """)
-    mag = ctx.load_module('magnetic module gen2', '1')
+    mag = ctx.load_module('magnetic module gen2', '4')
     mag.disengage()
     mag_plate = mag.load_labware(labware_pcr_plate, 'Mag Plate') #contains RNA samples + beads
 
