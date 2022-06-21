@@ -11,6 +11,7 @@
 # biorad_96_wellplate_200ul_pcr
 # usascientific_96_wellplate_2.4ml_deep
 
+ctx.set_rail_lights(True)
 
 def get_values(*names):
     import json
