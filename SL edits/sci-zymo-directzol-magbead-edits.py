@@ -11,8 +11,6 @@
 # biorad_96_wellplate_200ul_pcr
 # usascientific_96_wellplate_2.4ml_deep
 
-ctx.set_rail_lights(True)
-
 def get_values(*names):
     import json
     _all_values = json.loads("""{"num_samples":8,"deepwell_type":"usascientific_96_wellplate_2.4ml_deep",
@@ -31,12 +29,14 @@ from opentrons import types
 metadata = {
     'protocolName': 'Zymo Research Direct-zol™-96 MagBead RNA Kit',
     'author': 'Opentrons <protocols@opentrons.com>',
-    'apiLevel': '2.4'
+    'apiLevel': '2.5'
 }
 
 
 # Start protocol
 def run(ctx):
+
+    ctx.set_rail_lights(True)
 
     [num_samples, deepwell_type, res_type, starting_vol,
      elution_vol, park_tips, mag_gen, m300_mount] = get_values(  # noqa: F821
@@ -194,7 +194,7 @@ resuming.')
 
                 m300.home()
                 ctx.pause('Please empty liquid waste (slot 11) before \
-resuming.')
+                resuming.')
                 ctx.home()  # home before continuing with protocol
                 waste_vol = 0
             waste_vol += vol
@@ -394,6 +394,7 @@ resuming.')
             if resuspend:
                 # m300.mix(mix_reps, 30, loc)
                 resuspend_pellet(m, m300, 50)
+            m300.mix(mix_reps, 30)
             m300.blow_out(m.top())
             m300.air_gap(20)
             if park:
@@ -401,10 +402,25 @@ resuming.')
             else:
                 _drop(m300)
 
-        ctx.pause('''
-                    Incubating for 10 minutes for DNase 1 treatment
-                    with occasional mixing.
-        ''')
+        #Incubate 10 min, mix 3 times
+        for i, (m, spot) in enumerate(zip(mag_samples_m, parking_spots)):
+            _pick_up(m300, spot)
+            m300.mix(mix_reps, 0.9*vol, m.top())
+            m300.drop_tip(spot)
+        delay_sec = float(360 - (num_samples/8)*30)
+        ctx.delay(seconds = delay_sec)
+
+        for i, (m, spot) in enumerate(zip(mag_samples_m, parking_spots)):
+            _pick_up(m300, spot)
+            m300.mix(mix_reps, 0.9*vol, m.top())
+            m300.drop_tip(spot)
+        ctx.delay(seconds=delay_sec)
+
+        for i, (m, spot) in enumerate(zip(mag_samples_m, parking_spots)):
+            _pick_up(m300, spot)
+            m300.mix(mix_reps, 0.9*vol, m.top())
+            _drop(m300)
+        ctx.delay(minutes=5)
 
     def stop_reaction(vol, source, mix_reps=6, park=True, resuspend=True):
 
@@ -435,10 +451,29 @@ resuming.')
             else:
                 _drop(m300)
 
-        ctx.pause('''
-                     Incubating for 10 minutes with
-                     occasional mixing for stop reaction
-                     ''')
+        #Incubate 10 min, mix 3 times
+        if 0.9*vol < 200:
+            mix_vol = 0.9*vol
+        else:
+            mix_vol = 100
+        for i, (m, spot) in enumerate(zip(mag_samples_m, parking_spots)):
+            _pick_up(m300, spot)
+            m300.mix(mix_reps, mix_vol, m.top())
+            m300.drop_tip(spot)
+        delay_sec = float(360 - (num_samples/8)*30)
+        ctx.delay(seconds = delay_sec)
+
+        for i, (m, spot) in enumerate(zip(mag_samples_m, parking_spots)):
+            _pick_up(m300, spot)
+            m300.mix(mix_reps, mix_vol, m.top())
+            m300.drop_tip(spot)
+        ctx.delay(seconds=delay_sec)
+
+        for i, (m, spot) in enumerate(zip(mag_samples_m, parking_spots)):
+            _pick_up(m300, spot)
+            m300.mix(mix_reps, mix_vol, m.top())
+            _drop(m300)
+        ctx.delay(minutes=5)
 
         if magdeck.status == 'disengaged':
             magdeck.engage(height=MAG_HEIGHT)
