@@ -1,8 +1,6 @@
 def get_values(*names):
     import json
-    _all_values = json.loads("""{"num_samples":8,"deepwell_type":"nest_96_wellplate_2ml_deep",
-    "res_type":"nest_12_reservoir_15ml","starting_vol":200,"elution_vol":50,"park_tips":true,
-    "mag_gen":"magnetic module gen2","m300_mount":"left"}""")
+    _all_values = json.loads("""{"num_samples":8,"deepwell_type":"nest_96_wellplate_2ml_deep","res_type":"nest_12_reservoir_15ml","starting_vol":400,"elution_vol":50,"park_tips":true,"mag_gen":"magdeck","m300_mount":"left"}""")
     return [_all_values[n] for n in names]
 
 
@@ -486,7 +484,7 @@ resuming.')
     Here is where you can call the methods defined above to fit your specific
     protocol. The normal sequence is:
     """
-    bind(220, park=park_tips)
+    bind(430, park=park_tips)
     ctx.comment('\n\n\n')
     wash(500, wash1, park=park_tips)
     ctx.comment('\n\n\n')
@@ -501,10 +499,6 @@ resuming.')
     ctx.comment('\n\n\n')
     stop_reaction(500, stopreaction, park=park_tips)
     ctx.comment('\n\n\n')
-    wash(500, wash3, park=park_tips)
-    ctx.comment('original protocol skipped this step')
-    wash(300, wash4, park=park_tips)
-    ctx.comment('original protocol skipped this step')
     ctx.delay(minutes=10, msg="dry beads for 10 minute")
     elute(elution_vol, park=park_tips)
 

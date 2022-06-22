@@ -140,8 +140,10 @@ def run(ctx):
 
     def _pick_up(pip, loc=None):
         if tip_log[pip]['count'] == tip_log[pip]['max'] and not loc:
+            ctx.set_rail_lights(False)
             ctx.pause('Replace ' + str(pip.max_volume) + 'µl tipracks before \
 resuming.')
+            ctx.set_rail_lights(True)
             pip.reset_tipracks()
             tip_log[pip]['count'] = 0
         if loc:
@@ -170,7 +172,9 @@ resuming.')
         if drop_count >= drop_threshold:
             # Setup for flashing lights notification to empty trash
             m300.home()
+            ctx.set_rail_lights(False)
             ctx.pause('Please empty tips from waste before resuming.')
+            ctx.set_rail_lights(True)
             ctx.home()  # home before continuing with protocol
             drop_count = 0
 
@@ -193,8 +197,10 @@ resuming.')
                 # Setup for flashing lights notification to empty liquid waste
 
                 m300.home()
+                ctx.set_rail_lights(False)
                 ctx.pause('Please empty liquid waste (slot 11) before \
                 resuming.')
+                ctx.set_rail_lights(True)
                 ctx.home()  # home before continuing with protocol
                 waste_vol = 0
             waste_vol += vol
@@ -310,7 +316,9 @@ resuming.')
                 m300.drop_tip(spot)
             else:
                 _drop(m300)
+        ctx.set_rail_lights(False)
         ctx.pause('mix for 10 minutes off-deck in a heatershaker')
+        ctx.set_rail_lights(True)
         magdeck.engage(height=MAG_HEIGHT)
         ctx.delay(minutes=settling_time, msg='Incubating on MagDeck for \
 ' + str(settling_time) + ' minutes.')
@@ -405,22 +413,21 @@ resuming.')
         #Incubate 10 min, mix 3 times
         for i, (m, spot) in enumerate(zip(mag_samples_m, parking_spots)):
             _pick_up(m300, spot)
-            m300.mix(mix_reps, 0.9*vol, m.top())
+            m300.mix(mix_reps, 0.9*vol, m.bottom(0.5))
             m300.drop_tip(spot)
-        delay_sec = float(360 - (num_samples/8)*30)
+        delay_sec = float(300 - (num_samples/8)*25)
         ctx.delay(seconds = delay_sec)
 
         for i, (m, spot) in enumerate(zip(mag_samples_m, parking_spots)):
             _pick_up(m300, spot)
-            m300.mix(mix_reps, 0.9*vol, m.top())
+            m300.mix(mix_reps, 0.9*vol, m.bottom(0.5))
             m300.drop_tip(spot)
         ctx.delay(seconds=delay_sec)
 
         for i, (m, spot) in enumerate(zip(mag_samples_m, parking_spots)):
             _pick_up(m300, spot)
-            m300.mix(mix_reps, 0.9*vol, m.top())
+            m300.mix(mix_reps, 0.9*vol, m.bottom(0.5))
             _drop(m300)
-        ctx.delay(minutes=5)
 
     def stop_reaction(vol, source, mix_reps=6, park=True, resuspend=True):
 
@@ -458,22 +465,21 @@ resuming.')
             mix_vol = 100
         for i, (m, spot) in enumerate(zip(mag_samples_m, parking_spots)):
             _pick_up(m300, spot)
-            m300.mix(mix_reps, mix_vol, m.top())
+            m300.mix(mix_reps, mix_vol, m.bottom(0.5))
             m300.drop_tip(spot)
-        delay_sec = float(360 - (num_samples/8)*30)
-        ctx.delay(seconds = delay_sec)
+        delay_sec = float(300 - (num_samples/8)*25)
+        ctx.delay(seconds=delay_sec)
 
         for i, (m, spot) in enumerate(zip(mag_samples_m, parking_spots)):
             _pick_up(m300, spot)
-            m300.mix(mix_reps, mix_vol, m.top())
+            m300.mix(mix_reps, mix_vol, m.bottom(0.5))
             m300.drop_tip(spot)
         ctx.delay(seconds=delay_sec)
 
         for i, (m, spot) in enumerate(zip(mag_samples_m, parking_spots)):
             _pick_up(m300, spot)
-            m300.mix(mix_reps, mix_vol, m.top())
+            m300.mix(mix_reps, mix_vol, m.bottom(0.5))
             _drop(m300)
-        ctx.delay(minutes=5)
 
         if magdeck.status == 'disengaged':
             magdeck.engage(height=MAG_HEIGHT)
