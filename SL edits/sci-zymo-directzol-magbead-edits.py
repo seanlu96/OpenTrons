@@ -249,14 +249,14 @@ resuming.')
         'bottom' will be used, otherwise,
         the second value of each will be used.
         """
-        center = well.bottom().move(types.Point(x=0, y=0, z=0.1))
+        center = well.bottom().move(types.Point(x=0, y=0, z=0.5))
         top = [
-            well.bottom().move(types.Point(x=-3.8, y=3.8, z=0.1)),
-            well.bottom().move(types.Point(x=3.8, y=3.8, z=0.1))
+            well.bottom().move(types.Point(x=-3.5, y=3.5, z=0.5)),
+            well.bottom().move(types.Point(x=3.5, y=3.5, z=0.5))
         ]
         bottom = [
-            well.bottom().move(types.Point(x=-3.8, y=-3.8, z=0.1)),
-            well.bottom().move(types.Point(x=3.8, y=-3.8, z=0.1))
+            well.bottom().move(types.Point(x=-3.5, y=-3.5, z=0.5)),
+            well.bottom().move(types.Point(x=3.5, y=-3.5, z=0.5))
         ]
 
         pip.flow_rate.dispense = 500
