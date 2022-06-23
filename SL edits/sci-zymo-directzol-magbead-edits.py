@@ -542,7 +542,7 @@ resuming.')
     Here is where you can call the methods defined above to fit your specific
     protocol. The normal sequence is:
     """
-    bind(200, park=park_tips)
+    bind(220, park=park_tips)
     ctx.comment('\n\n\n')
     wash(500, wash1, park=park_tips)
     ctx.comment('\n\n\n')
