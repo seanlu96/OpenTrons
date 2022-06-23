@@ -1,8 +1,8 @@
 # Link to protocol https://protocols.opentrons.com/protocol/sci-zymo-directzol-magbead
 
 # Importing values from website
-# Samples = 8
-# Deepwell Type = Nest 96 wellplate 2ml deep
+# Samples = 24
+# Deepwell Type = usascientific_96_wellplate_2.4ml_deep
 # Reservoir Type = Nest 12 reservoir 15ml
 # Starting Volume = 300ml
 # Park Tips = True
@@ -13,7 +13,7 @@
 
 def get_values(*names):
     import json
-    _all_values = json.loads("""{"num_samples":8,"deepwell_type":"usascientific_96_wellplate_2.4ml_deep",
+    _all_values = json.loads("""{"num_samples":24,"deepwell_type":"usascientific_96_wellplate_2.4ml_deep",
     "res_type":"nest_12_reservoir_15ml","starting_vol":300,"elution_vol":50,"park_tips":true,
     "mag_gen":"magnetic module gen2","m300_mount":"left"}""")
     return [_all_values[n] for n in names]
@@ -206,7 +206,7 @@ resuming.')
             waste_vol += vol
 
         m300.flow_rate.aspirate = 30
-        num_trans = math.ceil(vol/200) #changed from vol/200 to vol/300
+        num_trans = math.ceil(vol/200)
         vol_per_trans = vol/num_trans
         for i, (m, spot) in enumerate(zip(mag_samples_m, parking_spots)):
             if park:
@@ -251,12 +251,12 @@ resuming.')
         """
         center = well.bottom().move(types.Point(x=0, y=0, z=0.5))
         top = [
-            well.bottom().move(types.Point(x=-3.5, y=3.5, z=0.5)),
-            well.bottom().move(types.Point(x=3.5, y=3.5, z=0.5))
+            well.bottom().move(types.Point(x=-3.0, y=3.0, z=1)),
+            well.bottom().move(types.Point(x=3.0, y=3.0, z=1))
         ]
         bottom = [
-            well.bottom().move(types.Point(x=-3.5, y=-3.5, z=0.5)),
-            well.bottom().move(types.Point(x=3.5, y=-3.5, z=0.5))
+            well.bottom().move(types.Point(x=-3.0, y=-3.0, z=1)),
+            well.bottom().move(types.Point(x=3.0, y=-3.0, z=1))
         ]
 
         pip.flow_rate.dispense = 500
