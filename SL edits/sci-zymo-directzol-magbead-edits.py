@@ -155,7 +155,7 @@ resuming.')
     switch = True
     drop_count = 0
     # number of tips trash will accommodate before prompting user to empty
-    drop_threshold = 120
+    drop_threshold = 193 #Was 120
 
     def _drop(pip):
         nonlocal switch
@@ -214,7 +214,7 @@ resuming.')
             else:
                 _pick_up(m300)
             side = -1 if i % 2 == 0 else 1
-            loc = m.bottom(0.5).move(Point(x=side*2))
+            loc = m.bottom(1).move(Point(x=side*2))
             for _ in range(num_trans):
                 _waste_track(vol_per_trans)
                 if m300.current_volume > 0:
