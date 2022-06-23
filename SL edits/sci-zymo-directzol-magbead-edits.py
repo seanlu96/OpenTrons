@@ -103,8 +103,8 @@ def run(ctx):
     mag_samples_m = magplate.rows()[0][:num_cols]
     elution_samples_m = elutionplate.rows()[0][:num_cols]
 
-#    magdeck.disengage()  # just in case
-    tempdeck.set_temperature(4)
+    #magdeck.disengage()  # just in case
+    #tempdeck.set_temperature(4)
 
     m300.flow_rate.aspirate = 50
     m300.flow_rate.dispense = 150
@@ -214,7 +214,7 @@ resuming.')
             else:
                 _pick_up(m300)
             side = -1 if i % 2 == 0 else 1
-            loc = m.bottom(1).move(Point(x=side*2))
+            loc = m.bottom(0.5).move(Point(x=side*2))
             for _ in range(num_trans):
                 _waste_track(vol_per_trans)
                 if m300.current_volume > 0:
@@ -557,7 +557,8 @@ resuming.')
     ctx.comment('\n\n\n')
     stop_reaction(500, stopreaction, park=park_tips)
     ctx.comment('\n\n\n')
-    ctx.delay(minutes=10, msg="dry beads for 10 minute")
+    tempdeck.set_temperature(4)
+    ctx.delay(minutes=5, msg="dry beads for 10 minute (5 min + tempdeck set temperature")
     elute(elution_vol, park=park_tips)
 
     # track final used tip
