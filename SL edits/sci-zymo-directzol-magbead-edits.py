@@ -486,7 +486,7 @@ resuming.')
 
         ctx.delay(minutes=settling_time, msg='Incubating on MagDeck for ' + str(settling_time) + ' minutes.')
 
-        remove_supernatant(vol, park=park)
+        remove_supernatant(vol+50, park=park)
 
     def elute(vol, park=True):
         """
