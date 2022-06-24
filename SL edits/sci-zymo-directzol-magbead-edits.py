@@ -484,7 +484,7 @@ resuming.')
         if magdeck.status == 'disengaged':
             magdeck.engage(height=MAG_HEIGHT)
 
-        ctx.delay(minutes=settling_time, msg='Incubating on MagDeck for \' + str(settling_time) + ' minutes.')
+        ctx.delay(minutes=settling_time, msg='Incubating on MagDeck for ' + str(settling_time) + ' minutes.')
 
         remove_supernatant(vol, park=park)
 
