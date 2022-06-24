@@ -251,12 +251,12 @@ resuming.')
         """
         center = well.bottom().move(types.Point(x=0, y=0, z=0.5))
         top = [
-            well.bottom().move(types.Point(x=-3.0, y=3.0, z=2)),
-            well.bottom().move(types.Point(x=3.0, y=3.0, z=2))
+            well.bottom().move(types.Point(x=-3.0, y=3.0, z=4)),
+            well.bottom().move(types.Point(x=3.0, y=3.0, z=4))
         ]
         bottom = [
-            well.bottom().move(types.Point(x=-3.0, y=-3.0, z=2)),
-            well.bottom().move(types.Point(x=3.0, y=-3.0, z=2))
+            well.bottom().move(types.Point(x=-3.0, y=-3.0, z=4)),
+            well.bottom().move(types.Point(x=3.0, y=-3.0, z=4))
         ]
 
         pip.flow_rate.dispense = 500
