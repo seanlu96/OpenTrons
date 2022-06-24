@@ -251,12 +251,12 @@ resuming.')
         """
         center = well.bottom().move(types.Point(x=0, y=0, z=0.5))
         top = [
-            well.bottom().move(types.Point(x=-3.0, y=3.0, z=1)),
-            well.bottom().move(types.Point(x=3.0, y=3.0, z=1))
+            well.bottom().move(types.Point(x=-3.0, y=3.0, z=2)),
+            well.bottom().move(types.Point(x=3.0, y=3.0, z=2))
         ]
         bottom = [
-            well.bottom().move(types.Point(x=-3.0, y=-3.0, z=1)),
-            well.bottom().move(types.Point(x=3.0, y=-3.0, z=1))
+            well.bottom().move(types.Point(x=-3.0, y=-3.0, z=2)),
+            well.bottom().move(types.Point(x=3.0, y=-3.0, z=2))
         ]
 
         pip.flow_rate.dispense = 500
@@ -301,7 +301,7 @@ resuming.')
                     # void air gap if necessary
                     m300.dispense(m300.current_volume, source.top())
                 if chan_ind > latest_chan:  # mix if accessing new channel
-                    for _ in range(5):
+                    for _ in range(11):
                         m300.aspirate(180, source.bottom(0.5))
                         m300.dispense(180, source.bottom(5))
                     latest_chan = chan_ind
@@ -411,23 +411,23 @@ resuming.')
                 _drop(m300)
 
         #Incubate 10 min, mix 3 times
-        for i, (m, spot) in enumerate(zip(mag_samples_m, parking_spots)):
-            _pick_up(m300, spot)
-            m300.mix(mix_reps, 0.9*vol, m.bottom(0.5))
-            m300.drop_tip(spot)
-        delay_sec = float(300 - (num_samples/8)*25)
-        ctx.delay(seconds = delay_sec)
-
-        for i, (m, spot) in enumerate(zip(mag_samples_m, parking_spots)):
-            _pick_up(m300, spot)
-            m300.mix(mix_reps, 0.9*vol, m.bottom(0.5))
-            m300.drop_tip(spot)
+        delay_sec = float(300 - (num_samples / 8) * 25)
         ctx.delay(seconds=delay_sec)
 
         for i, (m, spot) in enumerate(zip(mag_samples_m, parking_spots)):
             _pick_up(m300, spot)
             m300.mix(mix_reps, 0.9*vol, m.bottom(0.5))
+            m300.blow_out(m.top(-2))
+            m300.drop_tip(spot)
+
+        ctx.delay(seconds = delay_sec)
+
+        for i, (m, spot) in enumerate(zip(mag_samples_m, parking_spots)):
+            _pick_up(m300, spot)
+            m300.mix(mix_reps, 0.9*vol, m.bottom(0.5))
+            m300.blow_out(m.top(-2))
             _drop(m300)
+
 
     def stop_reaction(vol, source, mix_reps=6, park=True, resuspend=True):
 
@@ -463,29 +463,28 @@ resuming.')
             mix_vol = 0.9*vol
         else:
             mix_vol = 100
-        for i, (m, spot) in enumerate(zip(mag_samples_m, parking_spots)):
-            _pick_up(m300, spot)
-            m300.mix(mix_reps, mix_vol, m.bottom(0.5))
-            m300.drop_tip(spot)
-        delay_sec = float(300 - (num_samples/8)*25)
+
+        delay_sec = float(300 - (num_samples / 8) * 25)
         ctx.delay(seconds=delay_sec)
 
         for i, (m, spot) in enumerate(zip(mag_samples_m, parking_spots)):
             _pick_up(m300, spot)
             m300.mix(mix_reps, mix_vol, m.bottom(0.5))
+            m300.blow_out(m.top(-2))
             m300.drop_tip(spot)
+
         ctx.delay(seconds=delay_sec)
 
         for i, (m, spot) in enumerate(zip(mag_samples_m, parking_spots)):
             _pick_up(m300, spot)
             m300.mix(mix_reps, mix_vol, m.bottom(0.5))
-            _drop(m300)
+            m300.blow_out(m.top(-2))
+            m300.drop_tip(spot)
 
         if magdeck.status == 'disengaged':
             magdeck.engage(height=MAG_HEIGHT)
 
-        ctx.delay(minutes=settling_time, msg='Incubating on MagDeck for \
-' + str(settling_time) + ' minutes.')
+        ctx.delay(minutes=settling_time, msg='Incubating on MagDeck for \' + str(settling_time) + ' minutes.')
 
         remove_supernatant(vol, park=park)
 
@@ -542,7 +541,7 @@ resuming.')
     Here is where you can call the methods defined above to fit your specific
     protocol. The normal sequence is:
     """
-    bind(220, park=park_tips)
+    bind(320, park=park_tips)
     ctx.comment('\n\n\n')
     wash(500, wash1, park=park_tips)
     ctx.comment('\n\n\n')
