@@ -43,6 +43,8 @@ def run(ctx):
         'num_samples', 'deepwell_type', 'res_type', 'starting_vol',
         'elution_vol', 'park_tips', 'mag_gen', 'm300_mount')
 
+    tapestation_aliquots = True
+
     if num_samples % 8 != 0:
         raise Exception("Enter a sample number wholly divisible by 8")
     if not 0 <= num_samples <= 96:
@@ -63,16 +65,20 @@ def run(ctx):
     magdeck.disengage()
     magplate = magdeck.load_labware(deepwell_type, 'deepwell plate')
     tempdeck = ctx.load_module('Temperature Module Gen2', '3')
-    elutionplate = tempdeck.load_labware(
-                'opentrons_96_aluminumblock_biorad_wellplate_200ul')
+    if tapestation_aliquots:
+        tapestationplate = tempdeck.load_labware('opentrons_96_aluminumblock_biorad_wellplate_200ul')
+    tc = ctx.load_module('thermocycler')
+    elutionplate = tc.load_labware('biorad_96_wellplate_200ul_pcr')
     waste = ctx.load_labware('nest_1_reservoir_195ml', '9',
                              'Liquid Waste').wells()[0].top()
-    res2 = ctx.load_labware(res_type, '10', 'reagent reservoir 2')
-    res1 = ctx.load_labware(res_type, '7', 'reagent reservoir 1')
+    res2 = ctx.load_labware(res_type, '5', 'reagent reservoir 2')
+    res1 = ctx.load_labware(res_type, '6', 'reagent reservoir 1')
     num_cols = math.ceil(num_samples/8)
     tips300 = [ctx.load_labware('opentrons_96_tiprack_300ul', slot,
                                 '200µl filtertiprack')
-               for slot in ['2', '5', '6', '8', '11']]
+               for slot in ['2']]
+    # TODO: add p20 tips, figure out how to swap out res2 in later
+    # TODO: remove tempdeck, replace with thermocycler. Create new protocol for tapestation aliquots
     if park_tips:
         parkingrack = ctx.load_labware(
             'opentrons_96_tiprack_300ul', '1', 'tiprack for parking')
@@ -85,7 +91,13 @@ def run(ctx):
     # load P300M pipette
     m300 = ctx.load_instrument(
         'p300_multi_gen2', m300_mount, tip_racks=tips300)
-
+    if m300_mount == 'left':
+        m20_mount = 'right'
+    else
+        m20_mount = 'left'
+    m20 = ctx.load_instrument(
+        'p20_multi_gen2', m20_mount, tip_racks=tips20
+    )
     tip_log = {val: {} for val in ctx.loaded_instruments.values()}
 
     """
@@ -559,6 +571,11 @@ resuming.')
     tempdeck.set_temperature(4)
     ctx.delay(minutes=5, msg="dry beads for 10 minute (5 min + tempdeck set temperature")
     elute(elution_vol, park=park_tips)
+    #Make aliquots for Tapestation
+    if tapestation_aliquots:
+        tc.set_block_temperature(4)
+        m20.transfer(2,elutionplate.columns()[0:num_cols], tapestationplate.colums()[0:num_cols], air_gap = 5)
+
 
     # track final used tip
     if tip_track and not ctx.is_simulating():

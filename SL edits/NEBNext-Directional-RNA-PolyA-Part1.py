@@ -150,6 +150,8 @@ def run(ctx):
          name_list, well_list):
             named_tips[name] = tip_box[well]
 
+
+#-----------------------------------------------------------
     ctx.delay(seconds=10)
     pause_attention("""
     Set up for RNA Isolation, Fragmentation, Priming:
@@ -166,10 +168,10 @@ def run(ctx):
 
     ctx.comment("""
     reagent reservoir in deck slot 4:
-    col 1 - washed (NEB instructions) oligo dT beads (Already done in Part 0)
-    col 2 - wash buffer
-    col 3 - Tris buffer
-    col 4 - RNA binding buffer
+    col 1 - washed (NEB instructions) oligo dT beads (Already added to rna sample in Part 0)
+    col 2 - wash buffer (400ul per sample)
+    col 3 - Tris buffer (50ul per sample)
+    col 4 - RNA binding buffer (50ul per sample)
     col 10,11,12 - waste
     """)
     reagent_reservoir = ctx.load_labware(
@@ -187,7 +189,7 @@ def run(ctx):
     mag_plate = mag.load_labware(labware_pcr_plate, 'Mag Plate') #contains RNA samples + beads
 
     ctx.comment("""
-    reagent block for tube strips on 4 degree temperature module on deck 3
+    reagent block for tube strips on 4 degree temperature module on deck 3 (20ul of First strand Reaction Buffer and Random Primer Mix)
     """)
     temp = ctx.load_module('temperature module gen2', '3')
     reagent_block = temp.load_labware(labware_tube_strip, '4 Degree Block')
@@ -202,43 +204,7 @@ def run(ctx):
     {} samples in this run
     """.format(str(sample_count)))
     num_cols = math.ceil(sample_count / 8)
-    elution_plate = ctx.load_labware(
-     labware_pcr_plate, '7', 'RNA Sample Plate')
-
-    # Removed adding beads to RNA sample
-    #
-    # ctx.comment("""
-    # add beads to RNA and mix
-    # wait, engage magnet, wait
-    #
-    # liquid handling method for beads:
-    # slow flow rate for aspiration and dispense
-    # wait for liquid to finish moving after aspiration and dispense
-    # withdraw tip slowly from liquid
-    # """)
-    # viscous_flow_rates(p300m)
-    # for column in sample_plate.columns()[:num_cols]:
-    #     p300m.pick_up_tip()
-    #     p300m.mix(3, 100, oligo_dt_beads.bottom(clearance_reservoir), rate=2)
-    #     aspirate_with_delay(p300m, 50, oligo_dt_beads.bottom(
-    #      clearance_reservoir), delay_beads)
-    #     slow_tip_withdrawal(p300m, oligo_dt_beads)
-    #     dispense_with_delay(p300m, 50, column[0].bottom(
-    #      clearance_sample_plate), delay_beads)
-    #     p300m.mix(6, 50, column[0].bottom(3), rate=2)
-    #     p300m.drop_tip()
-    # default_flow_rates(p300m)
-    #
-    # pause_attention("""
-    #     pausing for off-deck thermocycler steps
-    #
-    #     denaturation and binding:
-    #     5 min 65 C
-    #     30 sec 4 C
-    #
-    #     return plate to the magnetic module and resume
-    #     as soon as temperature reaches 4 degrees
-    #     """)
+    #elution_plate = ctx.load_labware(labware_pcr_plate, '7', 'RNA Sample Plate')
 
     ctx.comment("""
         mix beads
@@ -342,7 +308,7 @@ def run(ctx):
     ctx.delay(minutes=engage_time)
     for column in mag_plate.columns()[:num_cols]:
         pick_up_or_refill(p300m)
-        p300m.aspirate(100, column[0].bottom(clearance_bead_pellet))
+        p300m.aspirate(100, column[0].bottom(clearance_bead_pellet)) #TODO: move_to side to remove supernatant?
         p300m.air_gap(15)
         p300m.dispense(115, waste_2.top())
         p300m.air_gap(15)
@@ -352,7 +318,7 @@ def run(ctx):
         add wash buffer
         mix
         """)
-    for column in mag_plate.columns()[:num_cols]:
+    for column in mag_plate.columns()[:num_cols]: #TODO: does this resuspend?
         pick_up_or_refill(p300m)
         p300m.aspirate(150, wash_buffer.bottom(clearance_reservoir))
         p300m.dispense(150, column[0].bottom(clearance_sample_plate))
@@ -397,7 +363,7 @@ def run(ctx):
         p20m.drop_tip()
 
     pause_attention("""
-        pausing for off-deck thermocycler steps
+        pausing, move to thermocycler module
 
         15 min 94 C
         ***plate on ice 1 min as it reaches 65 degrees***
@@ -409,6 +375,11 @@ def run(ctx):
         place fresh pcr plate in deck slot 7
         resume
         """)
+    tc.close_lid()
+    tc.set_lid_temperature(105)
+    tc.set_block_temperature(94, hold_time_minutes=15)
+    tc.set_block_temperature(4)
+
     ctx.comment("""
         engage magnet
         wait
