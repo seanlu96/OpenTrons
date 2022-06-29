@@ -1,10 +1,10 @@
 # Link to protocol https://protocols.opentrons.com/protocol/sci-zymo-directzol-magbead
 
 # Importing values from website
-# Samples = 24
+# Samples = 8
 # Deepwell Type = usascientific_96_wellplate_2.4ml_deep
 # Reservoir Type = Nest 12 reservoir 15ml
-# Starting Volume = 300ml
+# Starting Volume = 200ml
 # Park Tips = True
 # mag gen = Magnetic module gen 2
 # m300_mount = left
@@ -13,8 +13,8 @@
 
 def get_values(*names):
     import json
-    _all_values = json.loads("""{"num_samples":24,"deepwell_type":"usascientific_96_wellplate_2.4ml_deep",
-    "res_type":"nest_12_reservoir_15ml","starting_vol":300,"elution_vol":50,"park_tips":true,
+    _all_values = json.loads("""{"num_samples":16,"deepwell_type":"usascientific_96_wellplate_2.4ml_deep",
+    "res_type":"nest_12_reservoir_15ml","starting_vol":200,"elution_vol":50,"park_tips":true,
     "mag_gen":"magnetic module gen2","m300_mount":"left"}""")
     return [_all_values[n] for n in names]
 
@@ -47,6 +47,10 @@ def run(ctx):
         raise Exception("Enter a sample number wholly divisible by 8")
     if not 0 <= num_samples <= 96:
         raise Exception("Enter a sample number between 1-96")
+    if num_samples > 24:
+        two_res = True
+    else:
+        two_res = False
 
     if mag_gen == 'magdeck':
         MAG_HEIGHT = 13.6
@@ -66,7 +70,7 @@ def run(ctx):
     elutionplate = tc.load_labware('biorad_96_wellplate_200ul_pcr')
     waste = ctx.load_labware('nest_1_reservoir_195ml', '9',
                              'Liquid Waste').wells()[0].top()
-    if num_samples > 24:
+    if two_res:
         res2 = ctx.load_labware(res_type, '6', 'reagent reservoir 2')
     res1 = ctx.load_labware(res_type, '5', 'reagent reservoir 1')
     num_cols = math.ceil(num_samples/8)
@@ -91,7 +95,7 @@ def run(ctx):
     """
     Here is where you can define the locations of your reagents.
     """
-    if num_samples > 24:
+    if two_res:
         binding_buffer = res1.wells()[:4]
         wash1 = res1.wells()[4:8]
         wash2 = res1.wells()[8:]
@@ -306,7 +310,10 @@ resuming.')
             asp_per_chan = (0.95*res1.wells()[0].max_volume)//(vol_per_trans*8)
             for t in range(num_trans):
                 chan_ind = int((i*num_trans + t)//asp_per_chan)
-                source = binding_buffer[chan_ind]
+                if two_res:
+                    source = binding_buffer[chan_ind]
+                else:
+                    source = binding_buffer
                 if m300.current_volume > 0:
                     # void air gap if necessary
                     m300.dispense(m300.current_volume, source.top())
@@ -364,7 +371,10 @@ resuming.')
             _pick_up(m300)
             # side = 1 if i % 2 == 0 else -1
             # loc = m.bottom(0.5).move(Point(x=side*2))
-            src = source[i//(12//len(source))]
+            if two_res:
+                src = source[i//(12//len(source))]
+            else:
+                src = source
             for n in range(num_trans):
                 if m300.current_volume > 0:
                     m300.dispense(m300.current_volume, src.top())
@@ -401,7 +411,10 @@ resuming.')
             _pick_up(m300)
             # side = 1 if i % 2 == 0 else -1
             # loc = m.bottom(0.5).move(Point(x=side*2))
-            src = source[i//(12//len(source))]
+            if two_res:
+                src = source[i//(12//len(source))]
+            else:
+                src = source
             for n in range(num_trans):
                 if m300.current_volume > 0:
                     m300.dispense(m300.current_volume, src.top())
@@ -450,7 +463,10 @@ resuming.')
             _pick_up(m300)
             # side = 1 if i % 2 == 0 else -1
             # loc = m.bottom(0.5).move(Point(x=side*2))
-            src = source[i//(12//len(source))]
+            if two_res:
+                src = source[i//(12//len(source))]
+            else:
+                src = source
             for n in range(num_trans):
                 if m300.current_volume > 0:
                     m300.dispense(m300.current_volume, src.top())
