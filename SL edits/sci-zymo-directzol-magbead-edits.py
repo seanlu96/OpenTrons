@@ -319,8 +319,8 @@ resuming.')
                     m300.dispense(m300.current_volume, source.top())
                 if chan_ind > latest_chan:  # mix if accessing new channel
                     for _ in range(11):
-                        m300.aspirate(180, source.bottom(0.5), rate=1.5)
-                        m300.dispense(180, source.bottom(5), rate=1.5)
+                        m300.aspirate(180, source.bottom(0.5), rate=2)
+                        m300.dispense(180, source.bottom(5), rate=2)
                     latest_chan = chan_ind
                 m300.transfer(vol_per_trans, source, well.top(), air_gap=20,
                               new_tip='never')
