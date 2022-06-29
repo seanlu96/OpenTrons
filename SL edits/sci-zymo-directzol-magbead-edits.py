@@ -66,7 +66,8 @@ def run(ctx):
     elutionplate = tc.load_labware('biorad_96_wellplate_200ul_pcr')
     waste = ctx.load_labware('nest_1_reservoir_195ml', '9',
                              'Liquid Waste').wells()[0].top()
-    res2 = ctx.load_labware(res_type, '6', 'reagent reservoir 2')
+    if num_samples > 24:
+        res2 = ctx.load_labware(res_type, '6', 'reagent reservoir 2')
     res1 = ctx.load_labware(res_type, '5', 'reagent reservoir 1')
     num_cols = math.ceil(num_samples/8)
     tips300 = [ctx.load_labware('opentrons_96_tiprack_300ul', slot,
@@ -90,14 +91,24 @@ def run(ctx):
     """
     Here is where you can define the locations of your reagents.
     """
-    binding_buffer = res1.wells()[:4]
-    wash1 = res1.wells()[4:8]
-    wash2 = res1.wells()[8:]
-    dnase1 = [res2.wells()[0]]
-    stopreaction = res2.wells()[1:5]
-    wash3 = res2.wells()[5:9]
-    elution_solution = res2.wells()[-1]
-    wash4 = res2.wells()[9:11]
+    if num_samples > 24:
+        binding_buffer = res1.wells()[:4]
+        wash1 = res1.wells()[4:8]
+        wash2 = res1.wells()[8:]
+        dnase1 = res2.wells()[0]
+        stopreaction = res2.wells()[1:5]
+        wash3 = res2.wells()[5:9]
+        elution_solution = res2.wells()[-1]
+        wash4 = res2.wells()[9:11]
+    else:
+        binding_buffer = res1.wells()[0]
+        wash1 = res1.wells()[1]
+        wash2 = res1.wells()[2]
+        dnase1 = res1.wells()[3]
+        stopreaction = res2.wells()[4]
+        wash3 = res2.wells()[5]
+        elution_solution = res2.wells()[7]
+        wash4 = res2.wells()[6]
 
     mag_samples_m = magplate.rows()[0][:num_cols]
     elution_samples_m = elutionplate.rows()[0][:num_cols]
