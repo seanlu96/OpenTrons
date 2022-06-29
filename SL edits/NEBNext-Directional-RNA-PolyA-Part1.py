@@ -46,7 +46,7 @@ def run(ctx):
         "p20_multi_gen2", 'right', tip_racks=tips20)
     tips300 = [
      ctx.load_labware(
-      "opentrons_96_filtertiprack_200ul", str(slot)) for slot in [6, 9]]
+      "opentrons_96_filtertiprack_200ul", str(slot)) for slot in [5, 6]]
     p300m = ctx.load_instrument(
         "p300_multi_gen2", 'left', tip_racks=tips300)
 
@@ -167,8 +167,8 @@ def run(ctx):
     """)
 
     ctx.comment("""
-    reagent reservoir in deck slot 4:
-    col 1 - washed (NEB instructions) oligo dT beads (Already added to rna sample in Part 0)
+    reagent reservoir in deck slot 1:
+    col 1 - washed (NEB instructions) oligo dT beads (Already added to rna sample in Part 0, so empty)
     col 2 - wash buffer (400ul per sample)
     col 3 - Tris buffer (50ul per sample)
     col 4 - RNA binding buffer (50ul per sample)
@@ -182,7 +182,7 @@ def run(ctx):
       'A1', 'A2', 'A3', 'A4', 'A10', 'A11', 'A12']]
 
     ctx.comment("""
-    mag plate on magnetic module on deck 1
+    mag plate on magnetic module on deck 4
     """)
     mag = ctx.load_module('magnetic module gen2', '4')
     mag.disengage()
@@ -232,7 +232,7 @@ def run(ctx):
     ctx.delay(minutes=engage_time)
     for column in mag_plate.columns()[:num_cols]:
         p300m.pick_up_tip()
-        p300m.aspirate(100, column[0].bottom(clearance_bead_pellet)) #WARNING, check for beads
+        p300m.aspirate(100, column[0].bottom(clearance_bead_pellet)) #TODO: WARNING, check for beads
         p300m.air_gap(15)
         p300m.dispense(115, waste_1.top())
         p300m.air_gap(15)
