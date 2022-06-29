@@ -583,7 +583,7 @@ resuming.')
     stop_reaction(500, stopreaction, park=park_tips)
     ctx.comment('\n\n\n')
     ctx.delay(minutes=5, msg="dry beads for 10 minute (5 min + tc set temperature)")
-    tc.set_block_temperature(4)
+    tc.set_block_temperature(4) #TODO: PortNotOpenError [line 586]: Attempting to use a port that is not open
     elute(elution_vol, park=park_tips)
 
     # track final used tip
@@ -593,3 +593,6 @@ resuming.')
         data = {pip.name: tip_log[pip]['count'] for pip in tip_log}
         with open(tip_file_path, 'w') as outfile:
             json.dump(data, outfile)
+
+
+
