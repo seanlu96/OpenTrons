@@ -305,7 +305,7 @@ def run(ctx):
     tc.open_lid()
     tc.set_block_temperature(4)
     ctx.pause('Load RNA sample')
-    add_beads(20, beads)
+    add_beads(120, beads)
     wash(100, RNA_buffer, resuspend=False)
     ctx.delay(minutes=2)
     wash(100, RNA_buffer, resuspend=True)
