@@ -29,7 +29,7 @@ from opentrons import types
 metadata = {
     'protocolName': 'Zymo Research Direct-zol™-96 MagBead RNA Kit',
     'author': 'Opentrons <protocols@opentrons.com>',
-    'apiLevel': '2.5'
+    'apiLevel': '2.8'
 }
 
 
@@ -68,6 +68,8 @@ def run(ctx):
     magplate = magdeck.load_labware(deepwell_type, 'deepwell plate')
     tc = ctx.load_module('thermocycler')
     elutionplate = tc.load_labware('biorad_96_wellplate_200ul_pcr')
+    tempdeck = ctx.load_module('temperature module gen2', '3')
+    tapestation_tubes = tempdeck.load_labware('opentrons_96_aluminumblock_biorad_wellplate_200ul') #actually tapestation tube, not plate
     waste = ctx.load_labware('nest_1_reservoir_195ml', '9',
                              'Liquid Waste').wells()[0].top()
     if two_res:
@@ -76,7 +78,7 @@ def run(ctx):
     num_cols = math.ceil(num_samples/8)
     tips300 = [ctx.load_labware('opentrons_96_tiprack_300ul', slot,
                                 '200µl filtertiprack')
-               for slot in ['2', '3']]
+               for slot in ['2']]
     if park_tips:
         parkingrack = ctx.load_labware(
             'opentrons_96_tiprack_300ul', '1', 'tiprack for parking')
@@ -85,13 +87,14 @@ def run(ctx):
         tips300.insert(0, ctx.load_labware('opentrons_96_tiprack_300ul', '1',
                                            '200µl filtertiprack'))
         parking_spots = [None for none in range(12)]
+    tips20 = [ctx.load_labware('opentrons_96_tiprack_20ul', '6')]
 
     # load P300M pipette
     m300 = ctx.load_instrument(
         'p300_multi_gen2', m300_mount, tip_racks=tips300)
+    m20 = ctx.load_instrument('p20_multi_gen2', 'right', tip_racks=tips20)
 
     tip_log = {val: {} for val in ctx.loaded_instruments.values()}
-
     """
     Here is where you can define the locations of your reagents.
     """
@@ -116,6 +119,7 @@ def run(ctx):
 
     mag_samples_m = magplate.rows()[0][:num_cols]
     elution_samples_m = elutionplate.rows()[0][:num_cols]
+    tapestation_tubes_m = tapestation_tubes.rows()[0][:num_cols]
 
     #magdeck.disengage()  # just in case
     #tempdeck.set_temperature(4)
@@ -432,7 +436,8 @@ resuming.')
                 m300.drop_tip(spot)
             else:
                 _drop(m300)
-
+        #TODO: Fix not enough volume in well to allow for multichannel
+        ctx.pause('Add DNase by hand')
         #Incubate 10 min, mix 3 times
         delay_sec = float(300 - (num_samples / 8) * 25)
         ctx.delay(seconds=delay_sec)
@@ -563,6 +568,10 @@ resuming.')
             m300.air_gap(20)
             m300.drop_tip()
 
+    def tapestation_aliquots(vol):
+        for i, (m, t) in enumerate(zip(mag_samples_m, tapestation_tubes_m)):
+            m20.transfer(vol, m, t)
+
     """
     Here is where you can call the methods defined above to fit your specific
     protocol. The normal sequence is:
@@ -585,6 +594,8 @@ resuming.')
     ctx.delay(minutes=5, msg="dry beads for 10 minute (5 min + tc set temperature)")
     tc.set_block_temperature(4)
     elute(elution_vol, park=park_tips)
+    tempdeck.set_temperature(4)
+    tapestation_aliquots(2)
 
     # track final used tip
     if tip_track and not ctx.is_simulating():
