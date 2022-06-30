@@ -156,19 +156,19 @@ def run(ctx):
     pause_attention("""
     Set up for RNA Isolation, Fragmentation, Priming:
 
-    RNA sample plate in deck slot 7 (50 ul total RNA)
+    RNA sample plate in magdeck slot 4 (50 ul total RNA)
     (up to 24 samples arranged in columns of 8).
 
     Reagents in strip tubes on 4 degree temp module:
     column 1 - first-strand rxn bf/random primers
     (mixed and prepared see NEB instructions)
 
-    p20 tips in slot 2, p300 tips in slot 6 and 9.
+    p20 tips in slot 2, p200 tips in slot 5 and 6.
     """)
 
     ctx.comment("""
     reagent reservoir in deck slot 1:
-    col 1 - washed (NEB instructions) oligo dT beads (Already added to rna sample in Part 0, so empty)
+    col 1 - Empty
     col 2 - wash buffer (400ul per sample)
     col 3 - Tris buffer (50ul per sample)
     col 4 - RNA binding buffer (50ul per sample)
@@ -189,7 +189,13 @@ def run(ctx):
     mag_plate = mag.load_labware(labware_pcr_plate, 'Mag Plate') #contains RNA samples + beads
 
     ctx.comment("""
-    reagent block for tube strips on 4 degree temperature module on deck 3 (20ul of First strand Reaction Buffer and Random Primer Mix)
+    load thermocycler on deck 7,8,10,11
+    """)
+    tc = ctx.load_module('thermocycler')
+
+    ctx.comment("""
+    reagent block for tube strips on 4 degree temperature module on deck 3 
+    (20ul of First strand Reaction Buffer and Random Primer Mix)
     """)
     temp = ctx.load_module('temperature module gen2', '3')
     reagent_block = temp.load_labware(labware_tube_strip, '4 Degree Block')
@@ -277,14 +283,26 @@ def run(ctx):
         default_flow_rates(p300m)
         p300m.drop_tip()
 
+    tc.open_lid()
     pause_attention("""
-        pausing for off-deck thermocycler steps
+        Place RNA plate on thermocycler
 
         2 min 80 C
         30 sec 25 C
-
-        return plate to magnetic module and resume
+        
+        Total = ~5 min
         """)
+    tc.close_lid()
+    tc.set_lid_temperature(90)
+    tc.set_block_temperature(80, hold_time_minutes=2)
+    tc.set_block_temperature(25)
+    tc.open_lid()
+
+    pause_attention("""
+        Place RNA plate on magnetic module and resume
+        """)
+
+    tc.disengage()
 
     ctx.comment("""
         add RNA binding buffer
@@ -318,7 +336,7 @@ def run(ctx):
         add wash buffer
         mix
         """)
-    for column in mag_plate.columns()[:num_cols]: #TODO: does this resuspend?
+    for column in mag_plate.columns()[:num_cols]: #TODO: does this resuspend?, Why is this 150 instead of 200ul for Wash Buffer
         pick_up_or_refill(p300m)
         p300m.aspirate(150, wash_buffer.bottom(clearance_reservoir))
         p300m.dispense(150, column[0].bottom(clearance_sample_plate))
@@ -344,7 +362,7 @@ def run(ctx):
     pause_attention("""
         Remove and spin the plate.
         Then return it to the magnetic module. Resume.""")
-    mag.engage(offset=engage_offset)
+    mag.engage(offset=engage_offset) #TODO: These steps sound strange, spin plate and remove excess supernatant
     ctx.delay(minutes=1)
     pause_attention("""
         Manually remove traces of supernatant with a 10 ul tip. Resume.""")
@@ -362,6 +380,7 @@ def run(ctx):
         slow_tip_withdrawal(p20m, column[0])
         p20m.drop_tip()
 
+    tc.open_lid()
     pause_attention("""
         pausing, move to thermocycler module
 
@@ -378,7 +397,18 @@ def run(ctx):
     tc.close_lid()
     tc.set_lid_temperature(105)
     tc.set_block_temperature(94, hold_time_minutes=15)
+    tc.deactivate_lid()
+    tc.open_lid()
     tc.set_block_temperature(4)
+    ctx.pause_attention(
+        """REMOVE PLATE AND PLACE ON ICE, LID IS HOT
+        
+        spin plate
+        return plate to magnetic module
+        place fresh pcr plate in thermocycler
+        resume""")
+
+    elution_plate = tc.load_labware(labware_pcr_plate)
 
     ctx.comment("""
         engage magnet

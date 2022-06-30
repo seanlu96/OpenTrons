@@ -244,7 +244,7 @@ def run(ctx):
 
     def add_beads(vol, source, park=False):
         total_vol = vol*num_cols
-        m300.distribute(vol, source, magplate.columns()[0:num_cols], disposal_volume=5, mix_before=(6,0.9*total_vol))
+        m300.distribute(vol, source, magplate.columns()[0:num_cols], disposal_volume=5, mix_before=(6,0.9*vol))
 
     def wash(vol, source, mix_reps=15, park=True, resuspend=True, delay_time=2, discard_supernatant=True):
         """
@@ -316,6 +316,7 @@ def run(ctx):
     tc.set_lid_temperature(75)
     tc.set_block_temperature(65, hold_time_minutes=5, block_max_volume=50)
     tc.set_block_temperature(4)
+    tc.open_lid()
 
 
 

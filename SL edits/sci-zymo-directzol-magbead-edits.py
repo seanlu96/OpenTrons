@@ -285,11 +285,11 @@ resuming.')
         pip.move_to(center)
         for _ in range(reps):
             for _ in range(2):
-                pip.aspirate(mix_vol, center)
-                pip.dispense(mix_vol, top[rightLeft])
+                pip.aspirate(mix_vol, center, rate=2.0)
+                pip.dispense(mix_vol, top[rightLeft], rate=2.0)
             for _ in range(2):
-                pip.aspirate(mix_vol, center)
-                pip.dispense(mix_vol, bottom[rightLeft])
+                pip.aspirate(mix_vol, center, rate=2.0)
+                pip.dispense(mix_vol, bottom[rightLeft], rate=2.0)
 
     def bind(vol, park=True):
         """
@@ -415,23 +415,23 @@ resuming.')
             _pick_up(m300)
             # side = 1 if i % 2 == 0 else -1
             # loc = m.bottom(0.5).move(Point(x=side*2))
-            if two_res:
-                src = source[i//(12//len(source))]
-            else:
-                src = source
-            for n in range(num_trans):
-                if m300.current_volume > 0:
-                    m300.dispense(m300.current_volume, src.top())
-                m300.transfer(vol_per_trans, src, m.top(), air_gap=20,
-                              new_tip='never')
-                if n < num_trans - 1:  # only air_gap if going back to source
-                    m300.air_gap(20)
-            if resuspend:
-                # m300.mix(mix_reps, 30, loc)
-                resuspend_pellet(m, m300, 50)
-            m300.mix(mix_reps, 30)
-            m300.blow_out(m.top())
-            m300.air_gap(20)
+            # if two_res:
+            #     src = source[i//(12//len(source))]
+            # else:
+            #     src = source
+            # for n in range(num_trans):
+            #     if m300.current_volume > 0:
+            #         m300.dispense(m300.current_volume, src.top())
+            #     m300.transfer(vol_per_trans, src, m.top(), air_gap=20,
+            #                   new_tip='never')
+            #     if n < num_trans - 1:  # only air_gap if going back to source
+            #         m300.air_gap(20)
+            # if resuspend:
+            #     # m300.mix(mix_reps, 30, loc)
+            #     resuspend_pellet(m, m300, 50)
+            # m300.mix(mix_reps, 30)
+            # m300.blow_out(m.top())
+            # m300.air_gap(20)
             if park:
                 m300.drop_tip(spot)
             else:
@@ -533,8 +533,7 @@ resuming.')
         """
 
         # resuspend beads in elution
-        if magdeck.status == 'enagaged':
-            magdeck.disengage()
+        magdeck.disengage()
         for i, (m, spot) in enumerate(zip(mag_samples_m, parking_spots)):
             _pick_up(m300)
             side = 1 if i % 2 == 0 else -1
@@ -557,20 +556,20 @@ resuming.')
 
         for i, (m, e, spot) in enumerate(
                 zip(mag_samples_m, elution_samples_m, parking_spots)):
+            side = -1 if i % 2 == 0 else 1
+            loc = m.bottom(0.5).move(Point(x=side * 2))
             if park:
                 _pick_up(m300, spot)
+                m300.transfer(vol, loc, e.bottom(5), air_gap=20, new_tip='never')
+                m300.blow_out(e.top(-2))
+                m300.air_gap(20)
+                m300.drop_tip()
             else:
-                _pick_up(m300)
-            side = -1 if i % 2 == 0 else 1
-            loc = m.bottom(0.5).move(Point(x=side*2))
-            m300.transfer(vol, loc, e.bottom(5), air_gap=20, new_tip='never')
-            m300.blow_out(e.top(-2))
-            m300.air_gap(20)
-            m300.drop_tip()
+                m20.transfer(vol, loc, e.bottom(5), air_gap=2, new_tip='always', blow_out=True)
 
     def tapestation_aliquots(vol):
-        for i, (m, t) in enumerate(zip(mag_samples_m, tapestation_tubes_m)):
-            m20.transfer(vol, m, t)
+        for i, (e, t) in enumerate(zip(elution_samples_m, tapestation_tubes_m)):
+            m20.transfer(vol, e, t)
 
     """
     Here is where you can call the methods defined above to fit your specific
@@ -593,8 +592,8 @@ resuming.')
     ctx.comment('\n\n\n')
     ctx.delay(minutes=5, msg="dry beads for 10 minute (5 min + tc set temperature)")
     tc.set_block_temperature(4)
-    elute(elution_vol, park=park_tips)
     tempdeck.set_temperature(4)
+    elute(elution_vol, park=False)
     tapestation_aliquots(2)
 
     # track final used tip

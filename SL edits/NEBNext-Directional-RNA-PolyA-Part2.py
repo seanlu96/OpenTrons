@@ -226,7 +226,7 @@ def run(ctx):
     p20m.transfer(
      8, ss_rgnt[0].bottom(clearance_strip_tubes), [column[0].bottom(
       clearance_sample_plate) for column in sample_plate.columns()[
-      :num_cols]], new_tip='always')
+      :num_cols]], new_tip='always') #TODO: how does this only transfer from a single strip tube
     p20m.transfer(
      2, fs_enz[0].bottom(clearance_strip_tubes), [column[0].bottom(
       clearance_sample_plate) for column in sample_plate.columns()[
