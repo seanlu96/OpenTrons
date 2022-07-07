@@ -302,10 +302,11 @@ resuming.')
             asp_per_chan = (0.95*res1.wells()[0].max_volume)//(vol_per_trans*8)
             for t in range(num_trans):
                 chan_ind = int((i*num_trans + t)//asp_per_chan)
-                if two_res:
-                    source = binding_buffer[chan_ind]
-                else:
-                    source = binding_buffer
+                # if two_res:
+                #     source = binding_buffer[chan_ind]
+                # else:
+                #     source = binding_buffer
+                source = binding_buffer
                 if m300.current_volume > 0:
                     # void air gap if necessary
                     m300.dispense(m300.current_volume, source.top())
@@ -371,10 +372,11 @@ resuming.')
             _pick_up(m300)
             # side = 1 if i % 2 == 0 else -1
             # loc = m.bottom(0.5).move(Point(x=side*2))
-            if two_res:
-                src = source[i//(12//len(source))]
-            else:
-                src = source
+            # if two_res:
+            #     src = source[i//(12//len(source))]
+            # else:
+            #     src = source
+            src = source
             for n in range(num_trans):
                 if m300.current_volume > 0:
                     m300.dispense(m300.current_volume, src.top())
@@ -407,7 +409,7 @@ resuming.')
 
         num_trans = math.ceil(vol/200)
         vol_per_trans = vol/num_trans
-        for i, (m, spot) in enumerate(zip(mag_samples_m, parking_spots)):
+        #for i, (m, spot) in enumerate(zip(mag_samples_m, parking_spots)):
             #_pick_up(m300)
             # side = 1 if i % 2 == 0 else -1
             # loc = m.bottom(0.5).move(Point(x=side*2))
@@ -466,10 +468,11 @@ resuming.')
             _pick_up(m300)
             # side = 1 if i % 2 == 0 else -1
             # loc = m.bottom(0.5).move(Point(x=side*2))
-            if two_res:
-                src = source[i//(12//len(source))]
-            else:
-                src = source
+            # if two_res:
+            #     src = source[i//(12//len(source))]
+            # else:
+            #     src = source
+            src=source
             for n in range(num_trans):
                 if m300.current_volume > 0:
                     m300.dispense(m300.current_volume, src.top())
@@ -563,11 +566,8 @@ resuming.')
                 m300.air_gap(20)
                 m300.drop_tip()
             else:
-                m20.transfer(vol, loc, e.bottom(5), air_gap=2, new_tip='always', blow_out=True)
+                m300.transfer(vol, loc, e.bottom(5), air_gap=2, new_tip='always', blow_out=True)
 
-    def tapestation_aliquots(vol):
-        for i, (e, t) in enumerate(zip(elution_samples_m, tapestation_tubes_m)):
-            m20.transfer(vol, e, t)
 
     """
     Here is where you can call the methods defined above to fit your specific
