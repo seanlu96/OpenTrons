@@ -194,7 +194,7 @@ def run(ctx):
                 m300.blow_out(waste)
                 m300.air_gap(20)
             # m300.drop_tip()
-        m300.drop_tip() #TODO: check if drop tip can be here
+        m300.drop_tip()
         m300.flow_rate.aspirate = 150
 
     def resuspend_pellet(well, pip, mvol, reps=5):

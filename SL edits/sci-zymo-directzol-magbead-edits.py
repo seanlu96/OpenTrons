@@ -14,7 +14,7 @@
 def get_values(*names):
     import json
     _all_values = json.loads("""{"num_samples":8,"deepwell_type":"usascientific_96_wellplate_2.4ml_deep",
-    "res_type":"nest_12_reservoir_15ml","starting_vol":200,"elution_vol":50,"park_tips":true,
+    "res_type":"nest_12_reservoir_15ml","starting_vol":500,"elution_vol":50,"park_tips":true,
     "mag_gen":"magnetic module gen2","m300_mount":"left"}""")
     return [_all_values[n] for n in names]
 
@@ -54,10 +54,13 @@ def run(ctx):
 
     if mag_gen == 'magdeck':
         MAG_HEIGHT = 13.6
+    elif mag_gen == 'magnetic module gen2':
+        MAG_HEIGHT = 6.5
     else:
         MAG_HEIGHT = 6.8
 
-    settling_time = 7
+
+    settling_time = 5 #TODO: optomize?
 
     """
     Here is where you can change the locations of your labware and modules
@@ -330,16 +333,24 @@ resuming.')
                               new_tip='never')
                 if t < num_trans - 1:
                     m300.air_gap(20)
-            # m300.mix(5, 200, well)
+            m300.mix(5, 200, well)
             m300.blow_out(well.top(-2))
+            m300.touch_tip()
             m300.air_gap(20)
             if park:
                 m300.drop_tip(spot)
             else:
                 _drop(m300)
         ctx.set_rail_lights(False)
-        ctx.pause('mix for 10 minutes off-deck in a heatershaker')
-        ctx.set_rail_lights(True)
+        # Mix using pipettes
+        for _ in range(5):
+            for i, (well, spot) in enumerate(zip(mag_samples_m, parking_spots)):
+                _pick_up(m300)
+                m300.mix(6, 200, well)
+                m300.blow_out()
+                m300.touch_tip()
+                _drop(m300)
+            ctx.delay(minutes=1)
         magdeck.engage(height=MAG_HEIGHT)
         ctx.delay(minutes=settling_time, msg='Incubating on MagDeck for \
 ' + str(settling_time) + ' minutes.')
@@ -436,7 +447,7 @@ resuming.')
                 m300.drop_tip(spot)
             else:
                 _drop(m300)
-        #TODO: Fix not enough volume in well to allow for multichannel
+        #TODO: Fix not enough volume in well to allow for multichannel, for now it is by hand
         ctx.pause('Add DNase by hand')
         #Incubate 10 min, mix 3 times
         delay_sec = float(300 - (num_samples / 8) * 25)
@@ -575,7 +586,7 @@ resuming.')
     Here is where you can call the methods defined above to fit your specific
     protocol. The normal sequence is:
     """
-    bind(320, park=park_tips)
+    bind(420, park=park_tips)
     ctx.comment('\n\n\n')
     wash(500, wash1, park=park_tips)
     ctx.comment('\n\n\n')
@@ -594,7 +605,6 @@ resuming.')
     tc.set_block_temperature(4)
     tempdeck.set_temperature(4)
     elute(elution_vol, park=False)
-    tapestation_aliquots(2)
 
     # track final used tip
     if tip_track and not ctx.is_simulating():
