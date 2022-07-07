@@ -100,8 +100,11 @@ def run(ctx):
     dnase1 = res1.wells()[3]
     stopreaction = res1.wells()[4]
     wash3 = res1.wells()[5]
-    elution_solution = res1.wells()[7]
     wash4 = res1.wells()[6]
+    wash5 = res1.wells()[7]
+    wash6 = res1.wells()[8]
+    elution_solution = res1.wells()[9]
+
 
     mag_samples_m = magplate.rows()[0][:num_cols]
     elution_samples_m = elutionplate.rows()[0][:num_cols]
@@ -578,14 +581,16 @@ resuming.')
     ctx.comment('\n\n\n')
     wash(500, wash3, park=park_tips)
     ctx.comment('\n\n\n')
-    wash(300, wash4, park=park_tips)
+    wash(500, wash4, park=park_tips)
     ctx.comment('\n\n\n')
     # dnase1 treatment
     dnase(50, dnase1, park=park_tips)
     ctx.comment('\n\n\n')
     stop_reaction(500, stopreaction, park=park_tips)
+    wash(500, wash5, park=park_tips)
+    wash(500, wash6, park=park_tips)
     ctx.comment('\n\n\n')
-    ctx.delay(minutes=5, msg="dry beads for 10 minute (5 min + tc set temperature)")
+    ctx.delay(minutes=10, msg="dry beads for 10 minute; dry by hand")
     tc.set_block_temperature(4)
     elute(elution_vol, park=False)
 
