@@ -73,7 +73,7 @@ def run(ctx):
                              'Liquid Waste').wells()[0].top()
     res1 = ctx.load_labware(res_type, '5', 'reagent reservoir 1')
     num_cols = math.ceil(num_samples/8)
-    tips300 = [ctx.load_labware('opentrons_96_tiprack_300ul', slot,
+    tips300 = [ctx.load_labware('opentrons_96_filtertiprack_200ul', slot,
                                 '200µl filtertiprack')
                for slot in ['2', '3', '6']]
     if park_tips:
@@ -81,7 +81,7 @@ def run(ctx):
             'opentrons_96_tiprack_300ul', '1', 'tiprack for parking')
         parking_spots = parkingrack.rows()[0][:num_cols]
     else:
-        tips300.insert(0, ctx.load_labware('opentrons_96_tiprack_300ul', '1',
+        tips300.insert(0, ctx.load_labware('opentrons_96_filtertiprack_200ul', '1',
                                            '200µl filtertiprack'))
         parking_spots = [None for none in range(12)]
 
@@ -327,16 +327,15 @@ resuming.')
                 m300.drop_tip(spot)
             else:
                 _drop(m300)
-        ctx.set_rail_lights(False)
+
         # Mix using pipettes
         for _ in range(5):
+            ctx.delay(minutes=1, msg='Mixing Beads for 10 min')
             for i, (well, spot) in enumerate(zip(mag_samples_m, parking_spots)):
                 _pick_up(m300)
-                m300.mix(6, 200, well)
-                m300.blow_out()
-                m300.touch_tip()
+                m300.mix(6, 200, well, rate=2.0)
+                m300.blow_out(well.top(-2))
                 _drop(m300)
-            ctx.delay(minutes=1)
         magdeck.engage(height=MAG_HEIGHT)
         ctx.delay(minutes=settling_time, msg='Incubating on MagDeck for \
 ' + str(settling_time) + ' minutes.')
@@ -442,7 +441,7 @@ resuming.')
         ctx.delay(seconds=delay_sec)
         for i, (m, spot) in enumerate(zip(mag_samples_m, parking_spots)):
             _pick_up(m300, spot)
-            m300.mix(mix_reps, 0.9*vol, m.bottom(0.5))
+            m300.mix(mix_reps, 0.9*vol, m.bottom(0.5), rate=0.5)
             m300.blow_out(m.top(-2))
             m300.touch_tip()
             _drop(m300)
@@ -451,7 +450,7 @@ resuming.')
 
         for i, (m, spot) in enumerate(zip(mag_samples_m, parking_spots)):
             _pick_up(m300, spot)
-            m300.mix(mix_reps, 0.9*vol, m.bottom(0.5))
+            m300.mix(mix_reps, 0.9*vol, m.bottom(0.5), rate=0.5)
             m300.blow_out(m.top(-2))
             m300.touch_tip()
             _drop(m300)
@@ -573,7 +572,7 @@ resuming.')
     Here is where you can call the methods defined above to fit your specific
     protocol. The normal sequence is:
     """
-    bind(420, park=park_tips)
+    bind(520, park=park_tips)
     ctx.comment('\n\n\n')
     wash(500, wash1, park=park_tips)
     ctx.comment('\n\n\n')
